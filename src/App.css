@@ -1,3 +1,7 @@
+/* =========================================
+   PÁGINA GENERAL
+   ========================================= */
+
 .ofrenda {
   min-height: 100vh;
   background: #21152e;
@@ -17,12 +21,14 @@
   margin: 5px 0 0;
 }
 
-/* ALTAR */
+
+/* =========================================
+   ALTAR
+   ========================================= */
 
 .altar {
   width: 95%;
   max-width: 1600px;
-
   min-height: 700px;
 
   margin: 0 auto;
@@ -37,20 +43,28 @@
   border: 2px dashed rgba(255, 255, 255, 0.2);
 }
 
+
+/* =========================================
+   ZONA SUPERIOR DE DECORACIONES
+   ========================================= */
+
 .zona-decoracion {
   width: 90%;
   height: 130px;
 
   margin-bottom: 20px;
 
-  border: 2px dashed #ffffff55;
+  border: 2px dashed rgba(255, 255, 255, 0.33);
 
   display: flex;
   justify-content: center;
   align-items: center;
 }
 
-/* NIVELES */
+
+/* =========================================
+   NIVELES DEL ALTAR
+   ========================================= */
 
 .nivel {
   position: relative;
@@ -76,7 +90,271 @@
   width: 90%;
 }
 
-/* CATÁLOGO */
+
+/* =========================================
+   SUPERFICIE DE CADA NIVEL
+   ========================================= */
+
+.superficie {
+  height: 150px;
+
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-evenly;
+
+  gap: 10px;
+
+  padding: 15px 20px 8px;
+}
+
+
+/* =========================================
+   SOMBRA DE LOS NIVELES
+   ========================================= */
+
+.nivel::after {
+  content: '';
+
+  position: absolute;
+
+  left: 0;
+  right: 0;
+  bottom: -8px;
+
+  height: 8px;
+
+  background: rgba(0, 0, 0, 0.25);
+
+  z-index: -1;
+}
+
+
+/* =========================================
+   MANTEL
+   ========================================= */
+
+.mantel {
+  position: relative;
+
+  width: 100%;
+  height: 55px;
+
+  background: #fffdf2;
+
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+
+  overflow: hidden;
+
+  border-radius: 0 0 12px 12px;
+}
+
+.flores-mantel {
+  width: 100%;
+
+  padding-top: 3px;
+
+  text-align: center;
+
+  font-size: 24px;
+  letter-spacing: 5px;
+
+  white-space: nowrap;
+}
+
+
+/* =========================================
+   SLOTS
+   ========================================= */
+
+.slot {
+  width: 90px;
+  height: 105px;
+
+  flex-shrink: 0;
+
+  border: 2px dashed rgba(255, 255, 255, 0.35);
+  border-radius: 10px;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.45);
+
+  transition:
+    border-color 0.2s,
+    background 0.2s;
+}
+
+.slot-ocupado {
+  border-style: solid;
+}
+
+.slot-id {
+  pointer-events: none;
+}
+
+
+/* =========================================
+   ELEMENTOS COLOCADOS EN EL ALTAR
+   ========================================= */
+
+.elemento-colocado {
+  width: 100%;
+  height: 100%;
+
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+
+  cursor: grab;
+
+  background: transparent;
+
+  border-radius: 6px;
+}
+
+.elemento-colocado:active {
+  cursor: grabbing;
+}
+
+
+/* =========================================
+   IMÁGENES COLOCADAS EN EL ALTAR
+   ========================================= */
+
+.imagen-elemento {
+  display: block;
+
+  max-width: 100%;
+  max-height: 100%;
+
+  object-fit: contain;
+
+  pointer-events: none;
+  user-select: none;
+}
+
+
+/* Elementos altos:
+   vela, vaso, calavera, etc. */
+
+.imagen-vertical {
+  max-width: 75%;
+  max-height: 100%;
+}
+
+
+/* Elementos anchos:
+   pan, comida, fruta, etc. */
+
+.imagen-horizontal {
+  max-width: 100%;
+  max-height: 75%;
+}
+
+
+/* Elementos grandes:
+   flores, decoraciones, etc. */
+
+.imagen-grande {
+  max-width: 95%;
+  max-height: 95%;
+}
+
+
+/* =========================================
+   FOTOGRAFÍA COLOCADA EN EL ALTAR
+   ========================================= */
+
+/*
+  Este contenedor representa todo:
+  marco + fotografía.
+*/
+
+.foto-enmarcada {
+  position: relative;
+
+  width: 100%;
+  height: 100%;
+
+  overflow: hidden;
+}
+
+
+/*
+  Esta es la "ventana" interior del marco.
+
+  IMPORTANTE:
+  overflow: hidden evita que una fotografía
+  grande salga fuera del hueco del marco.
+*/
+
+.foto-enmarcada .contenedor-foto {
+  position: absolute;
+
+  width: 55%;
+  height: 55%;
+
+  left: 50%;
+  top: 50%;
+
+  transform: translate(-50%, -50%);
+
+  overflow: hidden;
+
+  z-index: 1;
+}
+
+
+/* Fotografía subida por el usuario */
+
+.foto-enmarcada .foto-usuario {
+  position: absolute;
+
+  width: 100%;
+  height: 100%;
+
+  left: 0;
+  top: 0;
+
+  display: block;
+
+  object-fit: cover;
+
+  z-index: 1;
+
+  pointer-events: none;
+  user-select: none;
+}
+
+
+/* Marco que se coloca encima de la fotografía */
+
+.foto-enmarcada .marco-foto {
+  position: absolute;
+
+  width: 100%;
+  height: 100%;
+
+  left: 0;
+  top: 0;
+
+  object-fit: contain;
+
+  z-index: 2;
+
+  pointer-events: none;
+  user-select: none;
+}
+
+
+/* =========================================
+   CATÁLOGO
+   ========================================= */
 
 .catalogo {
   width: 90%;
@@ -97,158 +375,275 @@
 
 .catalogo-elementos {
   display: flex;
-  gap: 15px;
+
+  gap: 16px;
+
   flex-wrap: wrap;
 }
 
-.catalogo-elementos button {
-  padding: 15px 25px;
 
-  border: none;
-  border-radius: 8px;
-
-  cursor: pointer;
-}
-
-.slot {
-  width: 80px;
-  height: 105px;
-
-  flex-shrink: 0;
-
-  border: 2px dashed rgba(255, 255, 255, 0.35);
-  border-radius: 10px;
-
-  display: flex;
-  justify-content: center;
-  align-items: center;
-
-  font-size: 11px;
-  color: rgba(255, 255, 255, 0.45);
-
-  transition:
-    border-color 0.2s,
-    background 0.2s;
-}
+/* =========================================
+   TARJETA DE ELEMENTO DEL CATÁLOGO
+   ========================================= */
 
 .elemento-catalogo {
-  width: 110px;
-  height: 100px;
+  width: 120px;
+  height: 135px;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+
+  padding: 10px;
+
+  background: #f8f5f0;
+
+  border: 2px solid transparent;
+  border-radius: 12px;
 
   cursor: grab;
 
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  transition:
+    transform 0.15s ease,
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.elemento-catalogo:hover {
+  transform: translateY(-3px);
+
+  border-color: #e0a23a;
+
+  box-shadow: 0 5px 12px rgba(0, 0, 0, 0.15);
 }
 
 .elemento-catalogo:active {
   cursor: grabbing;
 }
 
-.elemento-placeholder {
-  width: 100%;
-  height: 100%;
 
-  background: #f3f3f3;
-  border: 2px solid #ddd;
-  border-radius: 10px;
+/* =========================================
+   IMAGEN DEL CATÁLOGO
+   ========================================= */
 
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.imagen-catalogo {
+  width: 85px;
+  height: 95px;
 
-  padding: 10px;
+  object-fit: contain;
 
-  text-align: center;
-  font-size: 14px;
-}
-
-.elemento-colocado {
-  width: 100%;
-  height: 100%;
-
-  display: flex;
-  justify-content: center;
-  align-items: center;
-
-  padding: 5px;
-
-  text-align: center;
-
-  cursor: grab;
-
-  background: rgba(244, 162, 97, 0.25);
-
-  border-radius: 6px;
-}
-
-.elemento-colocado:active {
-  cursor: grabbing;
-}
-
-.slot-ocupado {
-  border-style: solid;
-}
-
-.slot-id {
   pointer-events: none;
+  user-select: none;
 }
 
-.superficie {
-  height: 150px;
+.elemento-catalogo span {
+  color: #333;
+
+  font-size: 13px;
+  text-align: center;
+}
+
+
+/* =========================================
+   MODAL DE FOTOGRAFÍA
+   ========================================= */
+
+.modal-overlay {
+  position: fixed;
+
+  inset: 0;
+
+  background: rgba(0, 0, 0, 0.7);
 
   display: flex;
-  align-items: flex-end;
-  justify-content: space-evenly;
+  justify-content: center;
+  align-items: center;
 
-  gap: 10px;
+  padding: 20px;
 
-  padding: 15px 20px 8px;
+  z-index: 1000;
 }
 
-.mantel {
+.modal-foto {
+  width: 100%;
+  max-width: 480px;
+
+  padding: 28px;
+
+  background: white;
+  color: #222;
+
+  border-radius: 16px;
+
+  text-align: center;
+
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+}
+
+.modal-foto h2 {
+  margin-top: 0;
+}
+
+
+/* =========================================
+   PREVIEW DE LA FOTO EN EL MODAL
+   ========================================= */
+
+.preview-marco {
   position: relative;
 
-  height: 55px;
-  width: 100%;
+  width: 220px;
+  height: 260px;
 
-  background: #fffdf2;
-
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
-
-  overflow: hidden;
-
-  border-radius: 0 0 12px 12px;
+  margin: 25px auto;
 }
 
-.flores-mantel {
-  width: 100%;
 
-  text-align: center;
+/*
+  Ventana de la fotografía en el preview.
 
-  font-size: 24px;
-  letter-spacing: 5px;
+  Aplicamos la misma idea que en el altar:
+  una ventana pequeña con overflow hidden.
+*/
 
-  white-space: nowrap;
-
-  padding-top: 3px;
-}
-
-.nivel::after {
+.preview-marco::before {
   content: '';
 
   position: absolute;
 
+  width: 55%;
+  height: 55%;
+
+  left: 50%;
+  top: 50%;
+
+  transform: translate(-50%, -50%);
+
+  z-index: 0;
+}
+
+
+/* Fotografía seleccionada */
+
+.preview-fotografia {
+  position: absolute;
+
+  width: 55%;
+  height: 55%;
+
+  left: 50%;
+  top: 50%;
+
+  transform: translate(-50%, -50%);
+
+  object-fit: cover;
+
+  z-index: 1;
+}
+
+
+/* Marco del preview */
+
+.preview-marco-imagen {
+  position: absolute;
+
+  width: 100%;
+  height: 100%;
+
   left: 0;
-  right: 0;
-  bottom: -8px;
+  top: 0;
 
-  height: 8px;
+  object-fit: contain;
 
-  background: rgba(0, 0, 0, 0.25);
+  z-index: 2;
 
-  z-index: -1;
+  pointer-events: none;
+  user-select: none;
+}
+
+
+/* =========================================
+   BOTÓN SELECCIONAR FOTOGRAFÍA
+   ========================================= */
+
+.boton-seleccionar {
+  display: inline-block;
+
+  padding: 12px 20px;
+
+  background: #5c3470;
+  color: white;
+
+  border-radius: 8px;
+
+  cursor: pointer;
+}
+
+.boton-seleccionar:hover {
+  background: #704486;
+}
+
+
+/* =========================================
+   TEXTOS DEL MODAL
+   ========================================= */
+
+.restricciones-foto {
+  margin-top: 10px;
+
+  color: #777;
+
+  font-size: 12px;
+}
+
+.error-foto {
+  color: #c62828;
+
+  font-size: 14px;
+}
+
+
+/* =========================================
+   BOTONES DEL MODAL
+   ========================================= */
+
+.modal-acciones {
+  display: flex;
+  justify-content: flex-end;
+
+  gap: 10px;
+
+  margin-top: 25px;
+}
+
+.modal-acciones button {
+  padding: 10px 18px;
+
+  border: none;
+  border-radius: 8px;
+
+  cursor: pointer;
+
+  font-size: 14px;
+}
+
+.boton-cancelar {
+  background: #eee;
+  color: #333;
+}
+
+.boton-agregar {
+  background: #5c3470;
+  color: white;
+}
+
+.boton-agregar:hover:not(:disabled) {
+  background: #704486;
+}
+
+.boton-agregar:disabled {
+  opacity: 0.4;
+
+  cursor: not-allowed;
 }

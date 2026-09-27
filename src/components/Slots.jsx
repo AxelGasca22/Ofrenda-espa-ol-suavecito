@@ -13,7 +13,7 @@ function Slot({
     const recibirElemento = (event) => {
         event.preventDefault()
 
-        // No permitimos colocar algo encima
+        // Si el slot ya está ocupado, no hacemos nada
         if (elemento) {
             return
         }
@@ -26,7 +26,7 @@ function Slot({
 
         const datosArrastre = JSON.parse(datos)
 
-        // ¿Viene de otro slot?
+        // Elemento que ya estaba colocado en el altar
         if (datosArrastre.origen) {
 
             moverElemento(
@@ -38,9 +38,10 @@ function Slot({
             return
         }
 
-        // Viene directamente del catálogo
+        // Elemento nuevo proveniente del catálogo
         colocarElemento(id, datosArrastre)
     }
+
 
     const iniciarArrastre = (event) => {
 
@@ -57,7 +58,10 @@ function Slot({
             'elemento',
             JSON.stringify(datos)
         )
+
+        event.dataTransfer.effectAllowed = 'move'
     }
+
 
     const solicitarEliminar = () => {
 
@@ -74,6 +78,7 @@ function Slot({
         }
     }
 
+
     return (
         <div
             className={`slot ${elemento ? 'slot-ocupado' : ''}`}
@@ -88,9 +93,42 @@ function Slot({
                     draggable
                     onDragStart={iniciarArrastre}
                     onDoubleClick={solicitarEliminar}
-                    title="Arrastra para mover. Doble clic para eliminar."
+                    title={`${elemento.nombre}. Arrastra para mover. Doble clic para eliminar.`}
                 >
-                    {elemento.nombre}
+
+                    {elemento.tipo === 'foto' ? (
+
+                        <div className="foto-enmarcada">
+
+                            <div className="contenedor-foto">
+                                <img
+                                    src={elemento.fotoUsuario}
+                                    alt="Fotografía"
+                                    className="foto-usuario"
+                                    draggable={false}
+                                />
+                            </div>
+
+                            <img
+                                src={elemento.imagen}
+                                alt="Marco de fotografía"
+                                className="marco-foto"
+                                draggable={false}
+                            />
+
+                        </div>
+
+                    ) : (
+
+                        <img
+                            src={elemento.imagen}
+                            alt={elemento.nombre}
+                            className={`imagen-elemento imagen-${elemento.tipo}`}
+                            draggable={false}
+                        />
+
+                    )}
+
                 </div>
 
             ) : (

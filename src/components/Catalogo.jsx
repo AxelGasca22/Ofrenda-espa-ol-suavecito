@@ -3,11 +3,12 @@ import elementos from '../data/elementos'
 function Catalogo() {
 
     const iniciarArrastre = (event, elemento) => {
-
         event.dataTransfer.setData(
             'elemento',
             JSON.stringify(elemento)
         )
+
+        event.dataTransfer.effectAllowed = 'copy'
     }
 
     return (
@@ -27,9 +28,17 @@ function Catalogo() {
                             iniciarArrastre(event, elemento)
                         }
                     >
-                        <div className="elemento-placeholder">
+
+                        <img
+                            src={elemento.imagen}
+                            alt={elemento.nombre}
+                            className="imagen-catalogo"
+                            draggable={false}
+                        />
+
+                        <span>
                             {elemento.nombre}
-                        </div>
+                        </span>
 
                     </div>
 
