@@ -1,4 +1,7 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { supabase } from '../lib/supabase'
+
+import elementos from '../data/elementos'
 
 import Altar from './Altar'
 import Catalogo from './Catalogo'
@@ -16,16 +19,60 @@ function Ofrenda() {
     // Elemento "Fotografía" proveniente del catálogo
     const [elementoFotoPendiente, setElementoFotoPendiente] = useState(null)
 
+    useEffect(() => {
 
-    const colocarElemento = (slotId, elemento) => {
+        const cargarElementos = async () => {
+
+            const { data, error } = await supabase
+                .from('elementos_colocados')
+                .select('*')
+
+            if (error) {
+                console.error('Error al cargar elementos:', error)
+                return
+            }
+
+            const elementosCargados = {}
+
+            data.forEach((registro) => {
+
+                const elemento = elementos.find(
+                    (elemento) => elemento.id === registro.elemento_id
+                )
+
+                if (elemento) {
+
+                    if (elemento.tipo === 'foto' && registro.foto_url) {
+
+                        elementosCargados[registro.slot_id] = {
+                            ...elemento,
+                            fotoUsuario: registro.foto_url
+                        }
+
+                    } else {
+
+                        elementosCargados[registro.slot_id] = elemento
+
+                    }
+                }
+            })
+
+            setElementosColocados(elementosCargados)
+        }
+
+        cargarElementos()
+
+    }, [])
+
+
+    const colocarElemento = async (slotId, elemento) => {
 
         // No permitir colocar encima de otro elemento
         if (elementosColocados[slotId]) {
             return
         }
 
-        // La fotografía tiene un comportamiento especial:
-        // primero abrimos el modal.
+        // Las fotografías las resolveremos después con Storage
         if (elemento.tipo === 'foto') {
 
             setSlotFotoPendiente(slotId)
@@ -34,7 +81,21 @@ function Ofrenda() {
             return
         }
 
-        // Cualquier otro elemento se coloca normalmente
+        // Guardar primero en Supabase
+        const { error } = await supabase
+            .from('elementos_colocados')
+            .insert({
+                slot_id: slotId,
+                elemento_id: elemento.id
+            })
+
+        if (error) {
+            console.error('Error al guardar elemento:', error)
+            return
+        }
+
+        // Si Supabase respondió correctamente,
+        // actualizamos también la interfaz
         setElementosColocados((anteriores) => ({
             ...anteriores,
             [slotId]: elemento
@@ -42,13 +103,26 @@ function Ofrenda() {
     }
 
 
-    const moverElemento = (origen, destino, elemento) => {
+    const moverElemento = async (origen, destino, elemento) => {
 
         // No permitir mover encima de otro elemento
         if (elementosColocados[destino]) {
             return
         }
 
+        const { error } = await supabase
+            .from('elementos_colocados')
+            .update({
+                slot_id: destino
+            })
+            .eq('slot_id', origen)
+
+        if (error) {
+            console.error('Error al mover elemento:', error)
+            return
+        }
+
+        // Supabase funcionó, ahora actualizamos React
         setElementosColocados((anteriores) => {
 
             const nuevos = {
@@ -64,8 +138,50 @@ function Ofrenda() {
     }
 
 
-    const eliminarElemento = (slotId) => {
+    const eliminarElemento = async (slotId) => {
 
+        const elemento = elementosColocados[slotId]
+
+        if (!elemento) {
+            return
+        }
+
+        // Si es fotografía, primero eliminamos el archivo de Storage
+        if (elemento.tipo === 'foto' && elemento.fotoUsuario) {
+
+            const url = elemento.fotoUsuario
+
+            // Extraer el nombre del archivo desde la URL pública
+            const nombreArchivo = url.split('/').pop()
+
+            const { error: errorStorage } = await supabase.storage
+                .from('fotos-ofrenda')
+                .remove([nombreArchivo])
+
+            if (errorStorage) {
+                console.error(
+                    'Error al eliminar fotografía de Storage:',
+                    errorStorage
+                )
+                return
+            }
+        }
+
+        // Eliminar el registro de la base de datos
+        const { error: errorBD } = await supabase
+            .from('elementos_colocados')
+            .delete()
+            .eq('slot_id', slotId)
+
+        if (errorBD) {
+            console.error(
+                'Error al eliminar elemento de la BD:',
+                errorBD
+            )
+            return
+        }
+
+        // Finalmente eliminarlo de React
         setElementosColocados((anteriores) => {
 
             const nuevos = {
@@ -86,28 +202,60 @@ function Ofrenda() {
     }
 
 
-    const confirmarFoto = ({ archivo, preview }) => {
+    const confirmarFoto = async ({ archivo, preview }) => {
 
         if (!slotFotoPendiente || !elementoFotoPendiente) {
             return
         }
 
-        // Creamos una nueva versión del elemento fotografía
-        // que además contiene la imagen seleccionada.
-        const elementoConFoto = {
-            ...elementoFotoPendiente,
+        // 1. Crear nombre único
+        const extension = archivo.name.split('.').pop()
+        const nombreArchivo = `${crypto.randomUUID()}.${extension}`
 
-            archivoFoto: archivo,
-            fotoUsuario: preview
+        // 2. Subir archivo a Storage
+        const { error: errorStorage } = await supabase.storage
+            .from('fotos-ofrenda')
+            .upload(nombreArchivo, archivo)
+
+        if (errorStorage) {
+            console.error('Error al subir fotografía:', errorStorage)
+            return
         }
 
-        // Ahora sí colocamos la fotografía en el slot
+        // 3. Obtener URL pública
+        const { data: datosUrl } = supabase.storage
+            .from('fotos-ofrenda')
+            .getPublicUrl(nombreArchivo)
+
+        const fotoUrl = datosUrl.publicUrl
+
+        // 4. Guardar la fotografía en nuestra tabla
+        const { error: errorBD } = await supabase
+            .from('elementos_colocados')
+            .insert({
+                slot_id: slotFotoPendiente,
+                elemento_id: elementoFotoPendiente.id,
+                foto_url: fotoUrl
+            })
+
+        if (errorBD) {
+            console.error('Error al guardar fotografía en BD:', errorBD)
+            return
+        }
+
+        // 5. Crear el elemento que React mostrará
+        const elementoConFoto = {
+            ...elementoFotoPendiente,
+            fotoUsuario: fotoUrl
+        }
+
+        // 6. Actualizar interfaz
         setElementosColocados((anteriores) => ({
             ...anteriores,
             [slotFotoPendiente]: elementoConFoto
         }))
 
-        // Cerramos el modal
+        // 7. Cerrar modal
         setSlotFotoPendiente(null)
         setElementoFotoPendiente(null)
     }
