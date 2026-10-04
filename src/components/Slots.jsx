@@ -3,15 +3,28 @@ function Slot({
     elemento,
     colocarElemento,
     moverElemento,
-    eliminarElemento
+    eliminarElemento,
+    slotActivo,
+    slotCercano,
+    setSlotActivo
 }) {
 
     const permitirDrop = (event) => {
         event.preventDefault()
     }
 
+
+    const entrarEnSlot = (event) => {
+        event.preventDefault()
+
+        setSlotActivo(id)
+    }
+
+
     const recibirElemento = (event) => {
         event.preventDefault()
+
+        setSlotActivo(null)
 
         // Si el slot ya está ocupado, no hacemos nada
         if (elemento) {
@@ -26,6 +39,7 @@ function Slot({
 
         const datosArrastre = JSON.parse(datos)
 
+
         // Elemento que ya estaba colocado en el altar
         if (datosArrastre.origen) {
 
@@ -37,6 +51,7 @@ function Slot({
 
             return
         }
+
 
         // Elemento nuevo proveniente del catálogo
         colocarElemento(id, datosArrastre)
@@ -79,9 +94,20 @@ function Slot({
     }
 
 
+    const clasesSlot = [
+        'slot',
+        elemento ? 'slot-ocupado' : '',
+        slotCercano ? 'slot-cercano' : '',
+        slotActivo && !elemento ? 'slot-activo' : ''
+    ]
+        .filter(Boolean)
+        .join(' ')
+
+
     return (
         <div
-            className={`slot ${elemento ? 'slot-ocupado' : ''}`}
+            className={clasesSlot}
+            onDragEnter={entrarEnSlot}
             onDragOver={permitirDrop}
             onDrop={recibirElemento}
         >
@@ -98,7 +124,12 @@ function Slot({
 
                     {elemento.tipo === 'foto' ? (
 
-                        <div className="foto-enmarcada">
+                        <div
+                            className="foto-enmarcada"
+                            style={{
+                                '--escala-elemento': elemento.escala || 1
+                            }}
+                        >
 
                             <div className="contenedor-foto">
                                 <img
@@ -124,6 +155,9 @@ function Slot({
                             src={elemento.imagen}
                             alt={elemento.nombre}
                             className={`imagen-elemento imagen-${elemento.tipo}`}
+                            style={{
+                                '--escala-elemento': elemento.escala || 1
+                            }}
                             draggable={false}
                         />
 

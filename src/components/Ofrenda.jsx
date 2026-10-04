@@ -202,23 +202,29 @@ function Ofrenda() {
     }
 
 
-    const confirmarFoto = async ({ archivo, preview }) => {
+    const confirmarFoto = async ({ archivo }) => {
 
         if (!slotFotoPendiente || !elementoFotoPendiente) {
             return
         }
 
-        // 1. Crear nombre único
-        const extension = archivo.name.split('.').pop()
+        // 1. Obtener extensión y generar nombre único
+        const extension = archivo.name.split('.').pop().toLowerCase()
         const nombreArchivo = `${crypto.randomUUID()}.${extension}`
 
-        // 2. Subir archivo a Storage
+        // 2. Subir archivo a Supabase Storage
         const { error: errorStorage } = await supabase.storage
             .from('fotos-ofrenda')
-            .upload(nombreArchivo, archivo)
+            .upload(nombreArchivo, archivo, {
+                cacheControl: '3600',
+                upsert: false
+            })
 
         if (errorStorage) {
-            console.error('Error al subir fotografía:', errorStorage)
+            console.error(
+                'Error al subir fotografía:',
+                errorStorage
+            )
             return
         }
 
@@ -229,7 +235,7 @@ function Ofrenda() {
 
         const fotoUrl = datosUrl.publicUrl
 
-        // 4. Guardar la fotografía en nuestra tabla
+        // 4. Guardar registro en base de datos
         const { error: errorBD } = await supabase
             .from('elementos_colocados')
             .insert({
@@ -239,11 +245,28 @@ function Ofrenda() {
             })
 
         if (errorBD) {
-            console.error('Error al guardar fotografía en BD:', errorBD)
+
+            console.error(
+                'Error al guardar fotografía en BD:',
+                errorBD
+            )
+
+            // Si falló la BD, eliminamos la foto que acabamos de subir
+            const { error: errorEliminar } = await supabase.storage
+                .from('fotos-ofrenda')
+                .remove([nombreArchivo])
+
+            if (errorEliminar) {
+                console.error(
+                    'No se pudo limpiar la fotografía de Storage:',
+                    errorEliminar
+                )
+            }
+
             return
         }
 
-        // 5. Crear el elemento que React mostrará
+        // 5. Crear elemento que React mostrará
         const elementoConFoto = {
             ...elementoFotoPendiente,
             fotoUsuario: fotoUrl
