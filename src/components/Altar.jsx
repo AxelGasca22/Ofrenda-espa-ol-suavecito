@@ -78,7 +78,7 @@ function Altar({
             <div className="nivel nivel-3">
 
                 <div className="superficie">
-                    {crearSlots(5, 'nivel3')}
+                    {crearSlots(7, 'nivel3')}
                 </div>
 
                 <div className="mantel">
@@ -93,7 +93,7 @@ function Altar({
             <div className="nivel nivel-2">
 
                 <div className="superficie">
-                    {crearSlots(8, 'nivel2')}
+                    {crearSlots(12, 'nivel2')}
                 </div>
 
                 <div className="mantel">
@@ -108,7 +108,7 @@ function Altar({
             <div className="nivel nivel-1">
 
                 <div className="superficie">
-                    {crearSlots(11, 'nivel1')}
+                    {crearSlots(15, 'nivel1')}
                 </div>
 
                 <div className="mantel">

@@ -338,7 +338,9 @@
 
   overflow: visible;
 
-  transform: scale(var(--escala-elemento, 1));
+  transform:
+    translateY(20px) scale(var(--escala-elemento, 1));
+
   transform-origin: center bottom;
 }
 
