@@ -1,11 +1,18 @@
 import { useState } from 'react'
 import Slot from './Slots'
 
+import lazoImg from '../assets/decoraciones/lazo.png'
+
+
 function Altar({
     elementosColocados,
     colocarElemento,
     moverElemento,
-    eliminarElemento
+    eliminarElemento,
+    decoracionesColocadas,
+    colocarDecoracion,
+    moverDecoracion,
+    eliminarDecoracion
 }) {
 
     const [slotActivo, setSlotActivo] = useState(null)
@@ -20,7 +27,6 @@ function Altar({
         const [nivelActivo, numeroActivo] = slotActivo.split('-')
         const [nivelSlot, numeroSlot] = slotId.split('-')
 
-        // Solo mostrar slots del mismo nivel
         if (nivelActivo !== nivelSlot) {
             return false
         }
@@ -29,7 +35,6 @@ function Altar({
             Number(numeroActivo) - Number(numeroSlot)
         )
 
-        // Slot actual + uno a cada lado
         return diferencia <= 1
     }
 
@@ -48,18 +53,107 @@ function Altar({
                     colocarElemento={colocarElemento}
                     moverElemento={moverElemento}
                     eliminarElemento={eliminarElemento}
-
                     slotActivo={slotActivo === slotId}
-
                     slotCercano={
                         esSlotCercano(slotId) &&
                         !elementosColocados[slotId]
                     }
-
                     setSlotActivo={setSlotActivo}
                 />
             )
         })
+    }
+
+
+    const permitirDropDecoracion = (event) => {
+        event.preventDefault()
+    }
+
+
+    const recibirDecoracion = (event) => {
+
+        event.preventDefault()
+
+        const datos =
+            event.dataTransfer.getData('decoracion')
+
+        if (!datos) {
+            return
+        }
+
+        const datosArrastre = JSON.parse(datos)
+
+        const rect =
+            event.currentTarget.getBoundingClientRect()
+
+        const x = (
+            (event.clientX - rect.left) /
+            rect.width
+        ) * 100
+
+        const y = (
+            (event.clientY - rect.top) /
+            rect.height
+        ) * 100
+
+
+        // Decoración que ya estaba colocada
+        if (datosArrastre.origen === 'zona-decoracion') {
+
+            moverDecoracion(
+                datosArrastre.idColocada,
+                x,
+                y
+            )
+
+            return
+        }
+
+
+        // Decoración nueva desde el catálogo
+        colocarDecoracion(
+            datosArrastre,
+            x,
+            y
+        )
+    }
+
+
+    const iniciarArrastreDecoracion = (
+        event,
+        decoracion
+    ) => {
+
+        const datos = {
+            origen: 'zona-decoracion',
+            idColocada: decoracion.idColocada,
+            decoracion: decoracion
+        }
+
+        event.dataTransfer.setData(
+            'decoracion',
+            JSON.stringify(datos)
+        )
+
+        event.dataTransfer.effectAllowed = 'move'
+    }
+
+
+    const solicitarEliminarDecoracion = (
+        decoracion
+    ) => {
+
+        const confirmado = window.confirm(
+            `¿Seguro que deseas eliminar "${decoracion.nombre}"?`
+        )
+
+        if (!confirmado) {
+            return
+        }
+
+        eliminarDecoracion(
+            decoracion.idColocada
+        )
     }
 
 
@@ -70,15 +164,64 @@ function Altar({
             onDrop={() => setSlotActivo(null)}
         >
 
-            <div className="zona-decoracion">
-                Decoraciones
+            <div
+                className="zona-decoracion"
+                onDragOver={permitirDropDecoracion}
+                onDrop={recibirDecoracion}
+            >
+
+                {/* Lazo fijo */}
+                <img
+                    src={lazoImg}
+                    alt="Lazo decorativo"
+                    className="lazo-decoracion"
+                    draggable={false}
+                />
+
+
+                {/* Decoraciones libres */}
+                {decoracionesColocadas.map((decoracion) => (
+
+                    <img
+                        key={decoracion.idColocada}
+                        src={decoracion.imagen}
+                        alt={decoracion.nombre}
+                        className="decoracion-colocada"
+                        draggable
+
+                        onDragStart={(event) =>
+                            iniciarArrastreDecoracion(
+                                event,
+                                decoracion
+                            )
+                        }
+
+                        onDoubleClick={() =>
+                            solicitarEliminarDecoracion(
+                                decoracion
+                            )
+                        }
+
+                        title={
+                            `${decoracion.nombre}. Arrastra para mover. Doble clic para eliminar.`
+                        }
+
+                        style={{
+                            left: `${decoracion.x}%`,
+                            top: `${decoracion.y}%`,
+                            width: `${decoracion.ancho || 90}px`
+                        }}
+                    />
+
+                ))}
+
             </div>
 
 
             <div className="nivel nivel-3">
 
                 <div className="superficie">
-                    {crearSlots(7, 'nivel3')}
+                    {crearSlots(6, 'nivel3')}
                 </div>
 
                 <div className="mantel">
@@ -93,7 +236,7 @@ function Altar({
             <div className="nivel nivel-2">
 
                 <div className="superficie">
-                    {crearSlots(12, 'nivel2')}
+                    {crearSlots(10, 'nivel2')}
                 </div>
 
                 <div className="mantel">
@@ -108,7 +251,7 @@ function Altar({
             <div className="nivel nivel-1">
 
                 <div className="superficie">
-                    {crearSlots(15, 'nivel1')}
+                    {crearSlots(13, 'nivel1')}
                 </div>
 
                 <div className="mantel">

@@ -2,22 +2,32 @@ import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 
 import elementos from '../data/elementos'
+import decoraciones from '../data/decoraciones'
 
 import Altar from './Altar'
 import Catalogo from './Catalogo'
+import CatalogoDecoraciones from './CatalogoDecoraciones'
 import ModalFoto from './ModalFoto'
 
 import marcoFoto from '../assets/elementos/foto.png'
 
+
 function Ofrenda() {
 
     const [elementosColocados, setElementosColocados] = useState({})
+
+    const [decoracionesColocadas, setDecoracionesColocadas] = useState([])
 
     // Slot donde el usuario intentó colocar una fotografía
     const [slotFotoPendiente, setSlotFotoPendiente] = useState(null)
 
     // Elemento "Fotografía" proveniente del catálogo
     const [elementoFotoPendiente, setElementoFotoPendiente] = useState(null)
+
+
+    // =========================================
+    // CARGAR ELEMENTOS DEL ALTAR
+    // =========================================
 
     useEffect(() => {
 
@@ -28,7 +38,10 @@ function Ofrenda() {
                 .select('*')
 
             if (error) {
-                console.error('Error al cargar elementos:', error)
+                console.error(
+                    'Error al cargar elementos:',
+                    error
+                )
                 return
             }
 
@@ -37,27 +50,34 @@ function Ofrenda() {
             data.forEach((registro) => {
 
                 const elemento = elementos.find(
-                    (elemento) => elemento.id === registro.elemento_id
+                    (elemento) =>
+                        elemento.id === registro.elemento_id
                 )
 
-                if (elemento) {
+                if (!elemento) {
+                    return
+                }
 
-                    if (elemento.tipo === 'foto' && registro.foto_url) {
+                if (
+                    elemento.tipo === 'foto' &&
+                    registro.foto_url
+                ) {
 
-                        elementosCargados[registro.slot_id] = {
-                            ...elemento,
-                            fotoUsuario: registro.foto_url
-                        }
-
-                    } else {
-
-                        elementosCargados[registro.slot_id] = elemento
-
+                    elementosCargados[registro.slot_id] = {
+                        ...elemento,
+                        fotoUsuario: registro.foto_url
                     }
+
+                } else {
+
+                    elementosCargados[registro.slot_id] =
+                        elemento
                 }
             })
 
-            setElementosColocados(elementosCargados)
+            setElementosColocados(
+                elementosCargados
+            )
         }
 
         cargarElementos()
@@ -65,23 +85,84 @@ function Ofrenda() {
     }, [])
 
 
-    const colocarElemento = async (slotId, elemento) => {
+    // =========================================
+    // CARGAR DECORACIONES
+    // =========================================
 
-        // No permitir colocar encima de otro elemento
+    useEffect(() => {
+
+        const cargarDecoraciones = async () => {
+
+            const { data, error } = await supabase
+                .from('decoraciones_colocadas')
+                .select('*')
+
+            if (error) {
+                console.error(
+                    'Error al cargar decoraciones:',
+                    error
+                )
+                return
+            }
+
+            const decoracionesCargadas = data
+                .map((registro) => {
+
+                    const decoracion = decoraciones.find(
+                        (item) =>
+                            item.id === registro.decoracion_id
+                    )
+
+                    if (!decoracion) {
+                        return null
+                    }
+
+                    return {
+                        ...decoracion,
+
+                        idColocada: registro.id,
+                        decoracionId: registro.decoracion_id,
+
+                        x: registro.posicion_x,
+                        y: registro.posicion_y
+                    }
+                })
+                .filter(Boolean)
+
+            setDecoracionesColocadas(
+                decoracionesCargadas
+            )
+        }
+
+        cargarDecoraciones()
+
+    }, [])
+
+
+    // =========================================
+    // COLOCAR ELEMENTO EN SLOT
+    // =========================================
+
+    const colocarElemento = async (
+        slotId,
+        elemento
+    ) => {
+
         if (elementosColocados[slotId]) {
             return
         }
 
-        // Las fotografías las resolveremos después con Storage
         if (elemento.tipo === 'foto') {
 
             setSlotFotoPendiente(slotId)
-            setElementoFotoPendiente(elemento)
+
+            setElementoFotoPendiente(
+                elemento
+            )
 
             return
         }
 
-        // Guardar primero en Supabase
         const { error } = await supabase
             .from('elementos_colocados')
             .insert({
@@ -90,22 +171,32 @@ function Ofrenda() {
             })
 
         if (error) {
-            console.error('Error al guardar elemento:', error)
+            console.error(
+                'Error al guardar elemento:',
+                error
+            )
             return
         }
 
-        // Si Supabase respondió correctamente,
-        // actualizamos también la interfaz
-        setElementosColocados((anteriores) => ({
-            ...anteriores,
-            [slotId]: elemento
-        }))
+        setElementosColocados(
+            (anteriores) => ({
+                ...anteriores,
+                [slotId]: elemento
+            })
+        )
     }
 
 
-    const moverElemento = async (origen, destino, elemento) => {
+    // =========================================
+    // MOVER ELEMENTO ENTRE SLOTS
+    // =========================================
 
-        // No permitir mover encima de otro elemento
+    const moverElemento = async (
+        origen,
+        destino,
+        elemento
+    ) => {
+
         if (elementosColocados[destino]) {
             return
         }
@@ -115,134 +206,340 @@ function Ofrenda() {
             .update({
                 slot_id: destino
             })
-            .eq('slot_id', origen)
+            .eq(
+                'slot_id',
+                origen
+            )
 
         if (error) {
-            console.error('Error al mover elemento:', error)
+            console.error(
+                'Error al mover elemento:',
+                error
+            )
             return
         }
 
-        // Supabase funcionó, ahora actualizamos React
-        setElementosColocados((anteriores) => {
+        setElementosColocados(
+            (anteriores) => {
 
-            const nuevos = {
-                ...anteriores
+                const nuevos = {
+                    ...anteriores
+                }
+
+                delete nuevos[origen]
+
+                nuevos[destino] =
+                    elemento
+
+                return nuevos
             }
-
-            delete nuevos[origen]
-
-            nuevos[destino] = elemento
-
-            return nuevos
-        })
+        )
     }
 
 
-    const eliminarElemento = async (slotId) => {
+    // =========================================
+    // ELIMINAR ELEMENTO
+    // =========================================
 
-        const elemento = elementosColocados[slotId]
+    const eliminarElemento = async (
+        slotId
+    ) => {
+
+        const elemento =
+            elementosColocados[slotId]
 
         if (!elemento) {
             return
         }
 
-        // Si es fotografía, primero eliminamos el archivo de Storage
-        if (elemento.tipo === 'foto' && elemento.fotoUsuario) {
+        // Si es fotografía,
+        // eliminar primero de Storage
+        if (
+            elemento.tipo === 'foto' &&
+            elemento.fotoUsuario
+        ) {
 
-            const url = elemento.fotoUsuario
+            const url =
+                elemento.fotoUsuario
 
-            // Extraer el nombre del archivo desde la URL pública
-            const nombreArchivo = url.split('/').pop()
+            const nombreArchivo =
+                url.split('/').pop()
 
-            const { error: errorStorage } = await supabase.storage
+            const {
+                error: errorStorage
+            } = await supabase.storage
                 .from('fotos-ofrenda')
-                .remove([nombreArchivo])
+                .remove([
+                    nombreArchivo
+                ])
 
             if (errorStorage) {
+
                 console.error(
                     'Error al eliminar fotografía de Storage:',
                     errorStorage
                 )
+
                 return
             }
         }
 
-        // Eliminar el registro de la base de datos
-        const { error: errorBD } = await supabase
+
+        const {
+            error: errorBD
+        } = await supabase
             .from('elementos_colocados')
             .delete()
-            .eq('slot_id', slotId)
+            .eq(
+                'slot_id',
+                slotId
+            )
 
         if (errorBD) {
+
             console.error(
                 'Error al eliminar elemento de la BD:',
                 errorBD
             )
+
             return
         }
 
-        // Finalmente eliminarlo de React
-        setElementosColocados((anteriores) => {
 
-            const nuevos = {
-                ...anteriores
+        setElementosColocados(
+            (anteriores) => {
+
+                const nuevos = {
+                    ...anteriores
+                }
+
+                delete nuevos[slotId]
+
+                return nuevos
             }
-
-            delete nuevos[slotId]
-
-            return nuevos
-        })
+        )
     }
 
 
-    const cancelarFoto = () => {
+    // =========================================
+    // COLOCAR DECORACIÓN
+    // =========================================
 
-        setSlotFotoPendiente(null)
-        setElementoFotoPendiente(null)
-    }
+    const colocarDecoracion = async (
+        decoracion,
+        posicionX,
+        posicionY
+    ) => {
 
+        const {
+            data,
+            error
+        } = await supabase
+            .from('decoraciones_colocadas')
+            .insert({
+                decoracion_id:
+                    decoracion.id,
 
-    const confirmarFoto = async ({ archivo }) => {
+                posicion_x:
+                    posicionX,
 
-        if (!slotFotoPendiente || !elementoFotoPendiente) {
+                posicion_y:
+                    posicionY
+            })
+            .select()
+            .single()
+
+        if (error) {
+
+            console.error(
+                'Error al guardar decoración:',
+                error
+            )
+
             return
         }
 
-        // 1. Obtener extensión y generar nombre único
-        const extension = archivo.name.split('.').pop().toLowerCase()
-        const nombreArchivo = `${crypto.randomUUID()}.${extension}`
 
-        // 2. Subir archivo a Supabase Storage
-        const { error: errorStorage } = await supabase.storage
-            .from('fotos-ofrenda')
-            .upload(nombreArchivo, archivo, {
-                cacheControl: '3600',
-                upsert: false
+        const nuevaDecoracion = {
+            ...decoracion,
+
+            idColocada: data.id,
+            decoracionId: decoracion.id,
+
+            x: posicionX,
+            y: posicionY
+        }
+
+
+        setDecoracionesColocadas(
+            (anteriores) => [
+                ...anteriores,
+                nuevaDecoracion
+            ]
+        )
+    }
+
+    const moverDecoracion = async (
+        idDecoracionColocada,
+        posicionX,
+        posicionY
+    ) => {
+
+        const { error } = await supabase
+            .from('decoraciones_colocadas')
+            .update({
+                posicion_x: posicionX,
+                posicion_y: posicionY
             })
+            .eq('id', idDecoracionColocada)
 
-        if (errorStorage) {
+        if (error) {
             console.error(
-                'Error al subir fotografía:',
-                errorStorage
+                'Error al mover decoración:',
+                error
             )
             return
         }
 
-        // 3. Obtener URL pública
-        const { data: datosUrl } = supabase.storage
+        setDecoracionesColocadas((anteriores) =>
+            anteriores.map((decoracion) =>
+                decoracion.idColocada === idDecoracionColocada
+                    ? {
+                        ...decoracion,
+                        x: posicionX,
+                        y: posicionY
+                    }
+                    : decoracion
+            )
+        )
+    }
+
+    const eliminarDecoracion = async (idColocada) => {
+
+        const { error } = await supabase
+            .from('decoraciones_colocadas')
+            .delete()
+            .eq('id', idColocada)
+
+        if (error) {
+            console.error(
+                'Error al eliminar decoración:',
+                error
+            )
+            return
+        }
+
+        setDecoracionesColocadas((anteriores) =>
+            anteriores.filter(
+                (decoracion) =>
+                    decoracion.idColocada !== idColocada
+            )
+        )
+    }
+
+
+    // =========================================
+    // CANCELAR FOTO
+    // =========================================
+
+    const cancelarFoto = () => {
+
+        setSlotFotoPendiente(null)
+
+        setElementoFotoPendiente(null)
+    }
+
+
+    // =========================================
+    // CONFIRMAR FOTO
+    // =========================================
+
+    const confirmarFoto = async ({
+        archivo
+    }) => {
+
+        if (
+            !slotFotoPendiente ||
+            !elementoFotoPendiente
+        ) {
+            return
+        }
+
+
+        // 1. Crear nombre único
+
+        const extension =
+            archivo.name
+                .split('.')
+                .pop()
+                .toLowerCase()
+
+        const nombreArchivo =
+            `${crypto.randomUUID()}.${extension}`
+
+
+        // 2. Subir archivo
+
+        const {
+            error: errorStorage
+        } = await supabase.storage
             .from('fotos-ofrenda')
-            .getPublicUrl(nombreArchivo)
+            .upload(
+                nombreArchivo,
+                archivo,
+                {
+                    cacheControl:
+                        '3600',
 
-        const fotoUrl = datosUrl.publicUrl
+                    upsert:
+                        false
+                }
+            )
 
-        // 4. Guardar registro en base de datos
-        const { error: errorBD } = await supabase
+
+        if (errorStorage) {
+
+            console.error(
+                'Error al subir fotografía:',
+                errorStorage
+            )
+
+            return
+        }
+
+
+        // 3. Obtener URL pública
+
+        const {
+            data: datosUrl
+        } = supabase.storage
+            .from('fotos-ofrenda')
+            .getPublicUrl(
+                nombreArchivo
+            )
+
+
+        const fotoUrl =
+            datosUrl.publicUrl
+
+
+        // 4. Guardar registro
+
+        const {
+            error: errorBD
+        } = await supabase
             .from('elementos_colocados')
             .insert({
-                slot_id: slotFotoPendiente,
-                elemento_id: elementoFotoPendiente.id,
-                foto_url: fotoUrl
+                slot_id:
+                    slotFotoPendiente,
+
+                elemento_id:
+                    elementoFotoPendiente.id,
+
+                foto_url:
+                    fotoUrl
             })
+
 
         if (errorBD) {
 
@@ -251,12 +548,18 @@ function Ofrenda() {
                 errorBD
             )
 
-            // Si falló la BD, eliminamos la foto que acabamos de subir
-            const { error: errorEliminar } = await supabase.storage
+
+            const {
+                error: errorEliminar
+            } = await supabase.storage
                 .from('fotos-ofrenda')
-                .remove([nombreArchivo])
+                .remove([
+                    nombreArchivo
+                ])
+
 
             if (errorEliminar) {
+
                 console.error(
                     'No se pudo limpiar la fotografía de Storage:',
                     errorEliminar
@@ -266,25 +569,40 @@ function Ofrenda() {
             return
         }
 
-        // 5. Crear elemento que React mostrará
+
+        // 5. Crear objeto para React
+
         const elementoConFoto = {
+
             ...elementoFotoPendiente,
-            fotoUsuario: fotoUrl
+
+            fotoUsuario:
+                fotoUrl
         }
 
+
         // 6. Actualizar interfaz
-        setElementosColocados((anteriores) => ({
-            ...anteriores,
-            [slotFotoPendiente]: elementoConFoto
-        }))
+
+        setElementosColocados(
+            (anteriores) => ({
+                ...anteriores,
+
+                [slotFotoPendiente]:
+                    elementoConFoto
+            })
+        )
+
 
         // 7. Cerrar modal
+
         setSlotFotoPendiente(null)
+
         setElementoFotoPendiente(null)
     }
 
 
     return (
+
         <div className="ofrenda">
 
             <header className="ofrenda-header">
@@ -300,22 +618,42 @@ function Ofrenda() {
             </header>
 
 
-            <Altar
-                elementosColocados={elementosColocados}
-                colocarElemento={colocarElemento}
-                moverElemento={moverElemento}
-                eliminarElemento={eliminarElemento}
-            />
+            <div className="area-ofrenda">
 
+                <Altar
+                    elementosColocados={elementosColocados}
+                    colocarElemento={colocarElemento}
+                    moverElemento={moverElemento}
+                    eliminarElemento={eliminarElemento}
+                    decoracionesColocadas={decoracionesColocadas}
+                    colocarDecoracion={colocarDecoracion}
+                    moverDecoracion={moverDecoracion}
+                    eliminarDecoracion={eliminarDecoracion}
+                />
+
+                <CatalogoDecoraciones />
+
+            </div>
 
             <Catalogo />
 
 
             <ModalFoto
-                abierto={slotFotoPendiente !== null}
-                marco={marcoFoto}
-                onCancelar={cancelarFoto}
-                onConfirmar={confirmarFoto}
+                abierto={
+                    slotFotoPendiente !== null
+                }
+
+                marco={
+                    marcoFoto
+                }
+
+                onCancelar={
+                    cancelarFoto
+                }
+
+                onConfirmar={
+                    confirmarFoto
+                }
             />
 
         </div>

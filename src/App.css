@@ -1,4 +1,25 @@
 /* =========================================
+   RESET GENERAL
+   ========================================= */
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  min-width: 0;
+  min-height: 100%;
+}
+
+body {
+  overflow-x: hidden;
+}
+
+
+/* =========================================
    PÁGINA GENERAL
    ========================================= */
 
@@ -6,19 +27,45 @@
   min-height: 100vh;
   background: #21152e;
   color: white;
+
+  --escala-global-elementos: 1;
 }
+
 
 .ofrenda-header {
   text-align: center;
-  padding: 20px;
+
+  padding: 20px 20px 15px;
 }
+
 
 .ofrenda-header h1 {
   margin: 0;
 }
 
+
 .ofrenda-header p {
   margin: 5px 0 0;
+}
+
+
+/* =========================================
+   ALTAR + CATÁLOGO DE DECORACIONES
+   ========================================= */
+
+.area-ofrenda {
+  width: min(98%, 1800px);
+
+  margin: 0 auto;
+
+  display: grid;
+
+  grid-template-columns:
+    minmax(0, 1fr) 150px;
+
+  gap: 16px;
+
+  align-items: start;
 }
 
 
@@ -35,12 +82,31 @@
 
   display: flex;
   flex-direction: column;
+
   align-items: center;
   justify-content: flex-end;
 
   padding: 30px 20px 20px;
 
   border: 2px dashed rgba(255, 255, 255, 0.2);
+
+  min-width: 0;
+}
+
+
+/*
+   Cuando el altar está dentro del layout
+   principal, dejamos que Grid controle
+   su ancho.
+*/
+
+.area-ofrenda .altar {
+  width: 100%;
+  max-width: none;
+
+  margin: 0;
+
+  min-width: 0;
 }
 
 
@@ -49,16 +115,68 @@
    ========================================= */
 
 .zona-decoracion {
-  width: 90%;
-  height: 130px;
+  position: relative;
 
-  margin-bottom: 20px;
+  width: 94%;
+  height: 190px;
 
-  border: 2px dashed rgba(255, 255, 255, 0.33);
+  margin-bottom: 25px;
 
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  border: 2px dashed rgba(255, 255, 255, 0.28);
+
+  overflow: hidden;
+}
+
+
+/* =========================================
+   LAZO
+   ========================================= */
+
+.lazo-decoracion {
+  position: absolute;
+
+  top: -40px;
+  left: 50%;
+
+  width: 92%;
+  height: auto;
+
+  transform:
+    translateX(-50%) scaleY(0.55);
+
+  transform-origin: top center;
+
+  pointer-events: none;
+  user-select: none;
+
+  z-index: 1;
+}
+
+
+/* =========================================
+   DECORACIONES COLOCADAS
+   ========================================= */
+
+.decoracion-colocada {
+  position: absolute;
+
+  height: auto;
+
+  transform: translate(-50%, -50%);
+
+  object-fit: contain;
+
+  pointer-events: auto;
+  user-select: none;
+
+  cursor: grab;
+
+  z-index: 2;
+}
+
+
+.decoracion-colocada:active {
+  cursor: grabbing;
 }
 
 
@@ -78,13 +196,16 @@
   border-right: 2px solid #6b417c;
 }
 
+
 .nivel-3 {
   width: 45%;
 }
 
+
 .nivel-2 {
   width: 68%;
 }
+
 
 .nivel-1 {
   width: 90%;
@@ -99,6 +220,7 @@
   height: 150px;
 
   display: flex;
+
   align-items: flex-end;
   justify-content: center;
 
@@ -142,6 +264,7 @@
   background: #fffdf2;
 
   display: flex;
+
   justify-content: center;
   align-items: flex-start;
 
@@ -149,6 +272,7 @@
 
   border-radius: 0 0 12px 12px;
 }
+
 
 .flores-mantel {
   width: 100%;
@@ -178,10 +302,12 @@
   border-radius: 10px;
 
   display: flex;
+
   justify-content: center;
   align-items: center;
 
   font-size: 11px;
+
   color: transparent;
 
   transition:
@@ -210,23 +336,28 @@
   transform: translateY(-2px);
 }
 
+
 .slot-ocupado {
   border-color: transparent;
 }
 
+
 .slot-id {
   pointer-events: none;
+
   color: transparent;
 }
 
+
 .slot:hover {
   border-color: rgba(255, 255, 255, 0.25);
+
   background: rgba(255, 255, 255, 0.04);
 }
 
 
 /* =========================================
-   ELEMENTOS COLOCADOS EN EL ALTAR
+   ELEMENTOS COLOCADOS
    ========================================= */
 
 .elemento-colocado {
@@ -234,6 +365,7 @@
   height: 100%;
 
   display: flex;
+
   justify-content: center;
   align-items: flex-end;
 
@@ -244,91 +376,83 @@
   border-radius: 6px;
 }
 
+
 .elemento-colocado:active {
   cursor: grabbing;
 }
 
 
 /* =========================================
-   TAMAÑOS DE ELEMENTOS DEL ALTAR
+   IMÁGENES DEL ALTAR
    ========================================= */
 
-/* Base para todas las imágenes */
 .imagen-elemento {
   display: block;
-
-  width: auto;
-  height: auto;
 
   max-width: 100%;
   max-height: 100%;
 
   object-fit: contain;
 
-  transform: scale(var(--escala-elemento, 1));
-  transform-origin: center bottom;
-
   pointer-events: none;
   user-select: none;
+
+  transform: scale(calc(var(--escala-elemento, 1) * var(--escala-global-elementos)));
+  transform-origin: bottom center;
 }
 
 
-/* Objetos altos y delgados:
-   vela, tequila, vaso de agua */
+/* Objetos altos */
+
 .imagen-vertical {
   max-width: 70%;
   max-height: 86%;
 }
 
 
-/* Objetos anchos:
-   pan, frutas, comida, tamales */
+/* Objetos anchos */
+
 .imagen-horizontal {
   max-width: 94%;
   max-height: 72%;
 }
 
 
-/* Objetos que queremos destacar:
-   cempasúchil, muñecas, etc. */
+/* Objetos grandes */
+
 .imagen-grande {
   max-width: 88%;
   max-height: 82%;
 }
 
 
-/* Objetos particularmente pequeños:
-   sal, canela, dulces, etc. */
+/* Objetos pequeños */
+
 .imagen-pequena {
   max-width: 70%;
   max-height: 60%;
 }
 
 
-/* Objetos muy anchos:
-   caña de azúcar, mazorcas */
+/* Objetos muy anchos */
+
 .imagen-ancha {
   max-width: 100%;
   max-height: 60%;
 }
 
-/* Para elementos que no son pequeños,
-   pero tampoco deben ocupar casi todo el slot */
+
+/* Objetos medianos */
+
 .imagen-media {
   max-width: 87%;
   max-height: 80%;
 }
 
 
-
 /* =========================================
-   FOTOGRAFÍA COLOCADA EN EL ALTAR
+   FOTOGRAFÍA ENMARCADA
    ========================================= */
-
-/*
-  Este contenedor representa todo:
-  marco + fotografía.
-*/
 
 .foto-enmarcada {
   position: relative;
@@ -336,22 +460,14 @@
   width: 100%;
   height: 100%;
 
-  overflow: visible;
+  overflow: hidden;
 
-  transform:
-    translateY(20px) scale(var(--escala-elemento, 1));
-
-  transform-origin: center bottom;
+  transform: scale(var(--escala-global-elementos));
+  transform-origin: bottom center;
 }
 
 
-/*
-  Esta es la "ventana" interior del marco.
-
-  IMPORTANTE:
-  overflow: hidden evita que una fotografía
-  grande salga fuera del hueco del marco.
-*/
+/* Ventana interior */
 
 .foto-enmarcada .contenedor-foto {
   position: absolute;
@@ -370,7 +486,7 @@
 }
 
 
-/* Fotografía subida por el usuario */
+/* Foto del usuario */
 
 .foto-enmarcada .foto-usuario {
   position: absolute;
@@ -392,7 +508,7 @@
 }
 
 
-/* Marco que se coloca encima de la fotografía */
+/* Marco */
 
 .foto-enmarcada .marco-foto {
   position: absolute;
@@ -413,7 +529,7 @@
 
 
 /* =========================================
-   CATÁLOGO
+   CATÁLOGO GENERAL
    ========================================= */
 
 .catalogo {
@@ -421,6 +537,7 @@
   max-width: 1400px;
 
   margin: 20px auto;
+
   padding: 20px;
 
   background: white;
@@ -429,9 +546,11 @@
   border-radius: 12px;
 }
 
+
 .catalogo h2 {
   margin-top: 0;
 }
+
 
 .catalogo-elementos {
   display: flex;
@@ -443,7 +562,7 @@
 
 
 /* =========================================
-   TARJETA DE ELEMENTO DEL CATÁLOGO
+   TARJETA DEL CATÁLOGO
    ========================================= */
 
 .elemento-catalogo {
@@ -452,6 +571,7 @@
 
   display: flex;
   flex-direction: column;
+
   align-items: center;
   justify-content: space-between;
 
@@ -470,13 +590,16 @@
     box-shadow 0.15s ease;
 }
 
+
 .elemento-catalogo:hover {
   transform: translateY(-3px);
 
   border-color: #e0a23a;
 
-  box-shadow: 0 5px 12px rgba(0, 0, 0, 0.15);
+  box-shadow:
+    0 5px 12px rgba(0, 0, 0, 0.15);
 }
+
 
 .elemento-catalogo:active {
   cursor: grabbing;
@@ -497,11 +620,105 @@
   user-select: none;
 }
 
+
 .elemento-catalogo span {
   color: #333;
 
   font-size: 13px;
+
   text-align: center;
+}
+
+
+/* =========================================
+   CATÁLOGO LATERAL DE DECORACIONES
+   ========================================= */
+
+.catalogo-decoraciones {
+  width: 150px;
+  height: 560px;
+
+  margin: 0;
+  padding: 14px;
+
+  background: white;
+  color: #222;
+
+  border-radius: 12px;
+
+  overflow-y: auto;
+  overflow-x: hidden;
+
+  position: sticky;
+
+  top: 15px;
+
+  scrollbar-width: thin;
+}
+
+
+/* Título fijo */
+
+.catalogo-decoraciones h2 {
+  position: sticky;
+
+  top: -14px;
+
+  z-index: 5;
+
+  margin:
+    -14px -14px 14px;
+
+  padding:
+    14px 6px 10px;
+
+  background: white;
+
+  font-size: 16px;
+  line-height: 1.15;
+
+  text-align: center;
+}
+
+
+/* Lista vertical */
+
+.catalogo-decoraciones .catalogo-elementos {
+  display: flex;
+  flex-direction: column;
+
+  align-items: center;
+
+  gap: 10px;
+
+  flex-wrap: nowrap;
+}
+
+
+/* Tarjetas laterales */
+
+.catalogo-decoraciones .elemento-catalogo {
+  width: 105px;
+  height: 115px;
+
+  padding: 8px;
+
+  flex-shrink: 0;
+}
+
+
+/* Imagen lateral */
+
+.catalogo-decoraciones .imagen-catalogo {
+  width: 70px;
+  height: 75px;
+}
+
+
+.catalogo-decoraciones .elemento-catalogo span {
+  font-size: 11px;
+
+  line-height: 1.1;
 }
 
 
@@ -517,6 +734,7 @@
   background: rgba(0, 0, 0, 0.7);
 
   display: flex;
+
   justify-content: center;
   align-items: center;
 
@@ -524,6 +742,7 @@
 
   z-index: 1000;
 }
+
 
 .modal-foto {
   width: 100%;
@@ -538,8 +757,10 @@
 
   text-align: center;
 
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+  box-shadow:
+    0 20px 60px rgba(0, 0, 0, 0.4);
 }
+
 
 .modal-foto h2 {
   margin-top: 0;
@@ -547,7 +768,7 @@
 
 
 /* =========================================
-   PREVIEW DE LA FOTO EN EL MODAL
+   PREVIEW DE FOTO
    ========================================= */
 
 .preview-marco {
@@ -559,13 +780,6 @@
   margin: 25px auto;
 }
 
-
-/*
-  Ventana de la fotografía en el preview.
-
-  Aplicamos la misma idea que en el altar:
-  una ventana pequeña con overflow hidden.
-*/
 
 .preview-marco::before {
   content: '';
@@ -584,8 +798,6 @@
 }
 
 
-/* Fotografía seleccionada */
-
 .preview-fotografia {
   position: absolute;
 
@@ -602,8 +814,6 @@
   z-index: 1;
 }
 
-
-/* Marco del preview */
 
 .preview-marco-imagen {
   position: absolute;
@@ -624,7 +834,7 @@
 
 
 /* =========================================
-   BOTÓN SELECCIONAR FOTOGRAFÍA
+   BOTÓN SELECCIONAR FOTO
    ========================================= */
 
 .boton-seleccionar {
@@ -639,6 +849,7 @@
 
   cursor: pointer;
 }
+
 
 .boton-seleccionar:hover {
   background: #704486;
@@ -657,6 +868,7 @@
   font-size: 12px;
 }
 
+
 .error-foto {
   color: #c62828;
 
@@ -670,12 +882,14 @@
 
 .modal-acciones {
   display: flex;
+
   justify-content: flex-end;
 
   gap: 10px;
 
   margin-top: 25px;
 }
+
 
 .modal-acciones button {
   padding: 10px 18px;
@@ -688,22 +902,414 @@
   font-size: 14px;
 }
 
+
 .boton-cancelar {
   background: #eee;
   color: #333;
 }
+
 
 .boton-agregar {
   background: #5c3470;
   color: white;
 }
 
+
 .boton-agregar:hover:not(:disabled) {
   background: #704486;
 }
+
 
 .boton-agregar:disabled {
   opacity: 0.4;
 
   cursor: not-allowed;
+}
+
+
+/* =========================================
+   RESPONSIVE - LAPTOP
+   ========================================= */
+
+@media (max-width: 1400px) {
+
+  .area-ofrenda {
+    width: 100%;
+
+    padding: 0 10px;
+
+    grid-template-columns:
+      minmax(0, 1fr) 120px;
+
+    gap: 10px;
+  }
+
+
+  .altar {
+    padding:
+      25px 10px 20px;
+  }
+
+
+  .catalogo-decoraciones {
+    width: 120px;
+    height: 520px;
+
+    padding: 8px;
+  }
+
+
+  .catalogo-decoraciones h2 {
+    top: -8px;
+
+    margin:
+      -8px -8px 10px;
+
+    padding:
+      10px 4px 8px;
+
+    font-size: 14px;
+  }
+
+
+  .catalogo-decoraciones .elemento-catalogo {
+    width: 92px;
+    height: 105px;
+
+    padding: 6px;
+  }
+
+
+  .catalogo-decoraciones .imagen-catalogo {
+    width: 62px;
+    height: 68px;
+  }
+
+
+  .catalogo-decoraciones .elemento-catalogo span {
+    font-size: 10px;
+  }
+
+
+  .zona-decoracion {
+    width: 96%;
+  }
+
+
+  .nivel-3 {
+    width: 48%;
+  }
+
+
+  .nivel-2 {
+    width: 72%;
+  }
+
+
+  .nivel-1 {
+    width: 94%;
+  }
+
+
+  .catalogo {
+    width: 94%;
+  }
+}
+
+
+/* =========================================
+   RESPONSIVE - LAPTOP PEQUEÑA / TABLET
+   ========================================= */
+
+@media (max-width: 1100px) {
+
+  .area-ofrenda {
+    grid-template-columns:
+      minmax(0, 1fr) 105px;
+  }
+
+
+  .catalogo-decoraciones {
+    width: 105px;
+  }
+
+
+  .catalogo-decoraciones .elemento-catalogo {
+    width: 84px;
+    height: 100px;
+  }
+
+
+  .catalogo-decoraciones .imagen-catalogo {
+    width: 56px;
+    height: 62px;
+  }
+
+
+  .superficie {
+    gap: 2px;
+
+    padding-left: 4px;
+    padding-right: 4px;
+  }
+
+
+  .slot {
+    width: 74px;
+  }
+}
+
+
+/* =========================================
+   RESPONSIVE - PANTALLA ESTRECHA
+   ========================================= */
+
+@media (max-width: 900px) {
+
+  .area-ofrenda {
+    display: block;
+
+    padding: 0;
+  }
+
+
+  .area-ofrenda .altar {
+    width: 100%;
+  }
+
+
+  .catalogo-decoraciones {
+    position: static;
+
+    width: 95%;
+    height: auto;
+    max-height: none;
+
+    margin: 15px auto;
+
+    overflow-x: auto;
+    overflow-y: hidden;
+  }
+
+
+  .catalogo-decoraciones h2 {
+    position: static;
+
+    margin: 0 0 10px;
+
+    padding: 0;
+
+    font-size: 16px;
+  }
+
+
+  .catalogo-decoraciones .catalogo-elementos {
+    flex-direction: row;
+
+    flex-wrap: nowrap;
+
+    justify-content: flex-start;
+
+    overflow-x: auto;
+
+    padding-bottom: 8px;
+  }
+
+
+  .catalogo-decoraciones .elemento-catalogo {
+    flex-shrink: 0;
+  }
+
+
+  .nivel-3 {
+    width: 55%;
+  }
+
+
+  .nivel-2 {
+    width: 78%;
+  }
+
+
+  .nivel-1 {
+    width: 98%;
+  }
+}
+
+
+/* =========================================
+   RESPONSIVE - MÓVIL
+   ========================================= */
+
+@media (max-width: 700px) {
+
+  .ofrenda-header h1 {
+    font-size: 22px;
+  }
+
+
+  .altar {
+    min-height: auto;
+
+    padding:
+      20px 5px;
+  }
+
+
+  .zona-decoracion {
+    width: 100%;
+    height: 170px;
+  }
+
+
+  .nivel-3,
+  .nivel-2,
+  .nivel-1 {
+    width: 100%;
+  }
+
+
+  .superficie {
+    overflow-x: auto;
+
+    justify-content: flex-start;
+
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+
+
+  .slot {
+    width: 72px;
+    height: 100px;
+  }
+
+
+  .catalogo {
+    width: 96%;
+
+    padding: 12px;
+  }
+
+
+  .elemento-catalogo {
+    width: 105px;
+    height: 125px;
+  }
+}
+
+/* =========================================
+   PANTALLAS CON POCA ALTURA
+   Laptop 15", resoluciones tipo 1366x768,
+   1536x864, etc.
+   ========================================= */
+
+@media (max-height: 900px) and (min-width: 901px) {
+
+  .ofrenda-header {
+    padding: 10px 20px;
+  }
+
+  .ofrenda-header h1 {
+    font-size: 24px;
+  }
+
+  .ofrenda-header p {
+    font-size: 13px;
+  }
+
+
+  /* Altar un poco más compacto */
+
+  .altar {
+    min-height: auto;
+
+    padding:
+      15px 12px 15px;
+  }
+
+
+  /* Zona de papel picado */
+
+  .zona-decoracion {
+    height: 155px;
+
+    margin-bottom: 15px;
+  }
+
+
+  /* Cada escalón */
+
+  .superficie {
+    height: 125px;
+
+    padding:
+      10px 8px 5px;
+
+    gap: 4px;
+  }
+
+
+  /* Slots más pequeños */
+
+  .slot {
+    width: 72px;
+    height: 90px;
+  }
+
+
+  /* Mantel más compacto */
+
+  .mantel {
+    height: 45px;
+  }
+
+
+  .flores-mantel {
+    font-size: 20px;
+
+    letter-spacing: 4px;
+  }
+
+
+  /* Catálogo lateral */
+
+  .catalogo-decoraciones {
+    height: 500px;
+  }
+}
+
+/* =========================================
+   AJUSTE DE ESCALA PARA LAPTOP
+   ========================================= */
+
+@media (max-width: 1400px) and (min-width: 901px) {
+
+  .altar {
+    --factor-responsive: 0.80;
+  }
+
+  .slot {
+    width: 68px;
+    height: 92px;
+  }
+
+  .superficie {
+    gap: 2px;
+
+    padding-left: 6px;
+    padding-right: 6px;
+  }
+}
+
+@media (max-width: 1440px) {
+  .ofrenda {
+    --escala-global-elementos: 1.08;
+  }
+}
+
+@media (max-width: 1366px) {
+  .ofrenda {
+    --escala-global-elementos: 1.01;
+  }
 }
