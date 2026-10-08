@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import Slot from './Slots'
+import mantelImg from '../assets/decoraciones/mantel.png'
 
 import lazoImg from '../assets/decoraciones/lazo.png'
 
@@ -225,9 +226,12 @@ function Altar({
                 </div>
 
                 <div className="mantel">
-                    <div className="flores-mantel">
-                        🌼 🌸 🌼 🌸 🌼 🌸 🌼
-                    </div>
+                    <img
+                        src={mantelImg}
+                        alt="Mantel bordado"
+                        className="imagen-mantel"
+                        draggable={false}
+                    />
                 </div>
 
             </div>
@@ -240,9 +244,12 @@ function Altar({
                 </div>
 
                 <div className="mantel">
-                    <div className="flores-mantel">
-                        🌸 🌼 🌸 🌼 🌸 🌼 🌸 🌼 🌸
-                    </div>
+                    <img
+                        src={mantelImg}
+                        alt="Mantel bordado"
+                        className="imagen-mantel"
+                        draggable={false}
+                    />
                 </div>
 
             </div>
@@ -255,9 +262,12 @@ function Altar({
                 </div>
 
                 <div className="mantel">
-                    <div className="flores-mantel">
-                        🌼 🌸 🌼 🌸 🌼 🌸 🌼 🌸 🌼 🌸 🌼
-                    </div>
+                    <img
+                        src={mantelImg}
+                        alt="Mantel bordado"
+                        className="imagen-mantel"
+                        draggable={false}
+                    />
                 </div>
 
             </div>
