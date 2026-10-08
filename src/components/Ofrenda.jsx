@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+
 import { supabase } from '../lib/supabase'
 
 import elementos from '../data/elementos'
@@ -18,6 +19,9 @@ function Ofrenda() {
 
     const [decoracionesColocadas, setDecoracionesColocadas] = useState([])
 
+    const [actualizando, setActualizando] = useState(false)
+
+
     // Slot donde el usuario intentó colocar una fotografía
     const [slotFotoPendiente, setSlotFotoPendiente] = useState(null)
 
@@ -29,114 +33,173 @@ function Ofrenda() {
     // CARGAR ELEMENTOS DEL ALTAR
     // =========================================
 
-    useEffect(() => {
+    const cargarElementos = async () => {
 
-        const cargarElementos = async () => {
+        const { data, error } = await supabase
+            .from('elementos_colocados')
+            .select('*')
 
-            const { data, error } = await supabase
-                .from('elementos_colocados')
-                .select('*')
 
-            if (error) {
-                console.error(
-                    'Error al cargar elementos:',
-                    error
-                )
+        if (error) {
+
+            console.error(
+                'Error al cargar elementos:',
+                error
+            )
+
+            return
+        }
+
+
+        const elementosCargados = {}
+
+
+        data.forEach((registro) => {
+
+            const elemento = elementos.find(
+                (elemento) =>
+                    elemento.id === registro.elemento_id
+            )
+
+
+            if (!elemento) {
                 return
             }
 
-            const elementosCargados = {}
 
-            data.forEach((registro) => {
+            if (
+                elemento.tipo === 'foto' &&
+                registro.foto_url
+            ) {
 
-                const elemento = elementos.find(
-                    (elemento) =>
-                        elemento.id === registro.elemento_id
-                )
-
-                if (!elemento) {
-                    return
+                elementosCargados[registro.slot_id] = {
+                    ...elemento,
+                    fotoUsuario: registro.foto_url
                 }
 
-                if (
-                    elemento.tipo === 'foto' &&
-                    registro.foto_url
-                ) {
+            } else {
 
-                    elementosCargados[registro.slot_id] = {
-                        ...elemento,
-                        fotoUsuario: registro.foto_url
-                    }
+                elementosCargados[registro.slot_id] =
+                    elemento
+            }
+        })
 
-                } else {
 
-                    elementosCargados[registro.slot_id] =
-                        elemento
-                }
-            })
-
-            setElementosColocados(
-                elementosCargados
-            )
-        }
-
-        cargarElementos()
-
-    }, [])
+        setElementosColocados(
+            elementosCargados
+        )
+    }
 
 
     // =========================================
     // CARGAR DECORACIONES
     // =========================================
 
-    useEffect(() => {
+    const cargarDecoraciones = async () => {
 
-        const cargarDecoraciones = async () => {
+        const { data, error } = await supabase
+            .from('decoraciones_colocadas')
+            .select('*')
 
-            const { data, error } = await supabase
-                .from('decoraciones_colocadas')
-                .select('*')
 
-            if (error) {
-                console.error(
-                    'Error al cargar decoraciones:',
-                    error
-                )
-                return
-            }
+        if (error) {
 
-            const decoracionesCargadas = data
-                .map((registro) => {
-
-                    const decoracion = decoraciones.find(
-                        (item) =>
-                            item.id === registro.decoracion_id
-                    )
-
-                    if (!decoracion) {
-                        return null
-                    }
-
-                    return {
-                        ...decoracion,
-
-                        idColocada: registro.id,
-                        decoracionId: registro.decoracion_id,
-
-                        x: registro.posicion_x,
-                        y: registro.posicion_y
-                    }
-                })
-                .filter(Boolean)
-
-            setDecoracionesColocadas(
-                decoracionesCargadas
+            console.error(
+                'Error al cargar decoraciones:',
+                error
             )
+
+            return
         }
 
-        cargarDecoraciones()
+
+        const decoracionesCargadas = data
+            .map((registro) => {
+
+                const decoracion = decoraciones.find(
+                    (item) =>
+                        item.id === registro.decoracion_id
+                )
+
+
+                if (!decoracion) {
+                    return null
+                }
+
+
+                return {
+                    ...decoracion,
+
+                    idColocada: registro.id,
+                    decoracionId: registro.decoracion_id,
+
+                    x: registro.posicion_x,
+                    y: registro.posicion_y
+                }
+            })
+            .filter(Boolean)
+
+
+        setDecoracionesColocadas(
+            decoracionesCargadas
+        )
+    }
+
+
+    // =========================================
+    // CARGAR TODA LA OFRENDA
+    // =========================================
+
+    const cargarOfrenda = async () => {
+
+        await Promise.all([
+            cargarElementos(),
+            cargarDecoraciones()
+        ])
+    }
+
+
+    // =========================================
+    // CARGA INICIAL
+    // =========================================
+
+    useEffect(() => {
+
+        cargarOfrenda()
 
     }, [])
+
+
+    // =========================================
+    // BOTÓN ACTUALIZAR
+    // =========================================
+
+    const actualizarOfrenda = async () => {
+
+        if (actualizando) {
+            return
+        }
+
+
+        setActualizando(true)
+
+
+        try {
+
+            await cargarOfrenda()
+
+        } catch (error) {
+
+            console.error(
+                'Error al actualizar la ofrenda:',
+                error
+            )
+
+        } finally {
+
+            setActualizando(false)
+        }
+    }
 
 
     // =========================================
@@ -152,6 +215,7 @@ function Ofrenda() {
             return
         }
 
+
         if (elemento.tipo === 'foto') {
 
             setSlotFotoPendiente(slotId)
@@ -163,6 +227,7 @@ function Ofrenda() {
             return
         }
 
+
         const { error } = await supabase
             .from('elementos_colocados')
             .insert({
@@ -170,13 +235,17 @@ function Ofrenda() {
                 elemento_id: elemento.id
             })
 
+
         if (error) {
+
             console.error(
                 'Error al guardar elemento:',
                 error
             )
+
             return
         }
+
 
         setElementosColocados(
             (anteriores) => ({
@@ -201,6 +270,7 @@ function Ofrenda() {
             return
         }
 
+
         const { error } = await supabase
             .from('elementos_colocados')
             .update({
@@ -211,13 +281,17 @@ function Ofrenda() {
                 origen
             )
 
+
         if (error) {
+
             console.error(
                 'Error al mover elemento:',
                 error
             )
+
             return
         }
+
 
         setElementosColocados(
             (anteriores) => {
@@ -226,10 +300,13 @@ function Ofrenda() {
                     ...anteriores
                 }
 
+
                 delete nuevos[origen]
+
 
                 nuevos[destino] =
                     elemento
+
 
                 return nuevos
             }
@@ -248,12 +325,15 @@ function Ofrenda() {
         const elemento =
             elementosColocados[slotId]
 
+
         if (!elemento) {
             return
         }
 
+
         // Si es fotografía,
         // eliminar primero de Storage
+
         if (
             elemento.tipo === 'foto' &&
             elemento.fotoUsuario
@@ -262,8 +342,10 @@ function Ofrenda() {
             const url =
                 elemento.fotoUsuario
 
+
             const nombreArchivo =
                 url.split('/').pop()
+
 
             const {
                 error: errorStorage
@@ -272,6 +354,7 @@ function Ofrenda() {
                 .remove([
                     nombreArchivo
                 ])
+
 
             if (errorStorage) {
 
@@ -295,6 +378,7 @@ function Ofrenda() {
                 slotId
             )
 
+
         if (errorBD) {
 
             console.error(
@@ -313,7 +397,9 @@ function Ofrenda() {
                     ...anteriores
                 }
 
+
                 delete nuevos[slotId]
+
 
                 return nuevos
             }
@@ -349,6 +435,7 @@ function Ofrenda() {
             .select()
             .single()
 
+
         if (error) {
 
             console.error(
@@ -379,6 +466,11 @@ function Ofrenda() {
         )
     }
 
+
+    // =========================================
+    // MOVER DECORACIÓN
+    // =========================================
+
     const moverDecoracion = async (
         idDecoracionColocada,
         posicionX,
@@ -391,49 +483,78 @@ function Ofrenda() {
                 posicion_x: posicionX,
                 posicion_y: posicionY
             })
-            .eq('id', idDecoracionColocada)
+            .eq(
+                'id',
+                idDecoracionColocada
+            )
+
 
         if (error) {
+
             console.error(
                 'Error al mover decoración:',
                 error
             )
+
             return
         }
 
-        setDecoracionesColocadas((anteriores) =>
-            anteriores.map((decoracion) =>
-                decoracion.idColocada === idDecoracionColocada
-                    ? {
-                        ...decoracion,
-                        x: posicionX,
-                        y: posicionY
-                    }
-                    : decoracion
-            )
+
+        setDecoracionesColocadas(
+            (anteriores) =>
+                anteriores.map(
+                    (decoracion) =>
+                        decoracion.idColocada ===
+                            idDecoracionColocada
+
+                            ? {
+                                ...decoracion,
+
+                                x: posicionX,
+                                y: posicionY
+                            }
+
+                            : decoracion
+                )
         )
     }
 
-    const eliminarDecoracion = async (idColocada) => {
+
+    // =========================================
+    // ELIMINAR DECORACIÓN
+    // =========================================
+
+    const eliminarDecoracion = async (
+        idColocada
+    ) => {
 
         const { error } = await supabase
             .from('decoraciones_colocadas')
             .delete()
-            .eq('id', idColocada)
+            .eq(
+                'id',
+                idColocada
+            )
+
 
         if (error) {
+
             console.error(
                 'Error al eliminar decoración:',
                 error
             )
+
             return
         }
 
-        setDecoracionesColocadas((anteriores) =>
-            anteriores.filter(
-                (decoracion) =>
-                    decoracion.idColocada !== idColocada
-            )
+
+        setDecoracionesColocadas(
+            (anteriores) =>
+                anteriores.filter(
+                    (decoracion) =>
+                        decoracion.idColocada !==
+                        idColocada
+                )
         )
     }
 
@@ -473,6 +594,7 @@ function Ofrenda() {
                 .split('.')
                 .pop()
                 .toLowerCase()
+
 
         const nombreArchivo =
             `${crypto.randomUUID()}.${extension}`
@@ -566,6 +688,7 @@ function Ofrenda() {
                 )
             }
 
+
             return
         }
 
@@ -618,27 +741,76 @@ function Ofrenda() {
             </header>
 
 
+            {/* =================================
+                CONTROLES
+               ================================= */}
+
+            <div className="controles-ofrenda">
+
+                <button
+                    type="button"
+                    className="boton-actualizar"
+                    onClick={actualizarOfrenda}
+                    disabled={actualizando}
+                >
+
+                    {actualizando
+                        ? 'Actualizando...'
+                        : '↻ Actualizar'
+                    }
+
+                </button>
+
+            </div>
+
+
             <div className="area-ofrenda">
 
                 <Altar
-                    elementosColocados={elementosColocados}
-                    colocarElemento={colocarElemento}
-                    moverElemento={moverElemento}
-                    eliminarElemento={eliminarElemento}
-                    decoracionesColocadas={decoracionesColocadas}
-                    colocarDecoracion={colocarDecoracion}
-                    moverDecoracion={moverDecoracion}
-                    eliminarDecoracion={eliminarDecoracion}
+                    elementosColocados={
+                        elementosColocados
+                    }
+
+                    colocarElemento={
+                        colocarElemento
+                    }
+
+                    moverElemento={
+                        moverElemento
+                    }
+
+                    eliminarElemento={
+                        eliminarElemento
+                    }
+
+                    decoracionesColocadas={
+                        decoracionesColocadas
+                    }
+
+                    colocarDecoracion={
+                        colocarDecoracion
+                    }
+
+                    moverDecoracion={
+                        moverDecoracion
+                    }
+
+                    eliminarDecoracion={
+                        eliminarDecoracion
+                    }
                 />
+
 
                 <CatalogoDecoraciones />
 
             </div>
 
+
             <Catalogo />
 
 
             <ModalFoto
+
                 abierto={
                     slotFotoPendiente !== null
                 }
@@ -654,10 +826,12 @@ function Ofrenda() {
                 onConfirmar={
                     confirmarFoto
                 }
+
             />
 
         </div>
     )
 }
+
 
 export default Ofrenda
